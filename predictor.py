@@ -15,8 +15,8 @@ boundary_letter = -1
 space_letter = 0
 max_data_size = 320000
 
-out_path = r'.'
-df = pd.read_csv(r'../input/en_train.csv')
+out_path = r'output'
+df = pd.read_csv(r'input/en_train.csv')
 
 x_data = []
 y_data =  pd.factorize(df['class'])
