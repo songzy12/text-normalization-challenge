@@ -7,8 +7,8 @@ import os
 import inflect
 import re
 
-INPUT_PATH = r'../input'
-SUBM_PATH = r'.'
+INPUT_PATH = r'./output/'
+SUBM_PATH = r'./output/'
 
 engine = inflect.engine()
 
@@ -17,6 +17,7 @@ DECIMAL_TMP = r'^(?!0)\d*\.\d+$'
 MONEY_TMP = r'^\$([^a-zA-Z]*)\s*([a-zA-Z]*)$'
 
 def inflect_transform(data):
+    # since the output of engine will have ','
     data = re.sub(r'-|,|\band\b', ' ', data)
     data = data.split(' ')
     data = [x for x in data if x is not '']
@@ -49,7 +50,7 @@ def MONEY_transform(data):
         return ' '.join([ts, m.group(2).lower(), 'dollars'])
     else: return ' '.join([ts, 'dollars'])
 
-def verbose_wrapper(func, data, verbose=False):
+def verbose_wrapper(func, data, verbose=True):
     if verbose: print('Before: ', data)
     data = func(data)
     if verbose: print('After: ', data)
@@ -59,9 +60,9 @@ def solve():
     print('Train start...')
     changes = 0
     total = 0
-    out = open(os.path.join(SUBM_PATH, 'enhanced_sub.csv'), "w", encoding='UTF8')
+    out = open(os.path.join(SUBM_PATH, 'baseline_ext_enhanced_en.csv'), "w", encoding='UTF8')
     out.write('"id","after"\n')
-    test = open(os.path.join(INPUT_PATH, "baseline.csv"), encoding='UTF8')
+    test = open(os.path.join(INPUT_PATH, "baseline_ext_en.csv"), encoding='UTF8')
     line = test.readline().strip()
     while 1:
         line = test.readline().strip()
@@ -77,13 +78,13 @@ def solve():
 
         try:
             if re.match(DECIMAL_TMP, line):
-                line = verbose_wrapper(DECIMAL_transform, data=line, verbose=False)
+                line = verbose_wrapper(DECIMAL_transform, data=line)
                 changes += 1
             elif re.match(MONEY_TMP, line):
-                line = verbose_wrapper(MONEY_transform, data=line, verbose=False)
+                line = verbose_wrapper(MONEY_transform, data=line)
                 changes += 1
             elif re.match(NUMBER_TMP, line):
-                line = verbose_wrapper(DIGIT_transform, data=line, verbose=False)
+                line = verbose_wrapper(DIGIT_transform, data=line)
                 changes += 1
         except Exception as ex:
             print('Exception: ', ex)
