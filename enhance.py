@@ -17,7 +17,7 @@ DECIMAL_TMP = r'^(?!0)\d*\.\d+$'
 MONEY_TMP = r'^\$([^a-zA-Z]*)\s*([a-zA-Z]*)$'
 
 def inflect_transform(data):
-    # since the output of engine will have ','
+    # since the output of engine will have '-|,|\band\b'
     data = re.sub(r'-|,|\band\b', ' ', data)
     data = data.split(' ')
     data = [x for x in data if x is not '']
@@ -50,8 +50,11 @@ def MONEY_transform(data):
         return ' '.join([ts, m.group(2).lower(), 'dollars'])
     else: return ' '.join([ts, 'dollars'])
 
-def verbose_wrapper(func, data, verbose=True):
-    if verbose: print('Before: ', data)
+
+def verbose_wrapper(func, data, total=0, verbose=True):
+    if verbose: 
+        print('nu: ', total + 2)
+        print('Before: ', data)
     data = func(data)
     if verbose: print('After: ', data)
     return data
@@ -78,13 +81,13 @@ def solve():
 
         try:
             if re.match(DECIMAL_TMP, line):
-                line = verbose_wrapper(DECIMAL_transform, data=line)
+                line = verbose_wrapper(DECIMAL_transform, data=line, total=total)
                 changes += 1
             elif re.match(MONEY_TMP, line):
-                line = verbose_wrapper(MONEY_transform, data=line)
+                line = verbose_wrapper(MONEY_transform, data=line, total=total)
                 changes += 1
             elif re.match(NUMBER_TMP, line):
-                line = verbose_wrapper(DIGIT_transform, data=line)
+                line = verbose_wrapper(DIGIT_transform, data=line, total=total)
                 changes += 1
         except Exception as ex:
             print('Exception: ', ex)

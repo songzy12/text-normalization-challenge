@@ -11,6 +11,7 @@ from num2words import num2words
 import gc
 import io
 import json
+import re
 
 INPUT_PATH = r'./input'
 DATA_INPUT_PATH = r'./input/en_with_types'
@@ -19,6 +20,18 @@ SUBM_PATH = r'./output'
 SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
 SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
 OTH = str.maketrans("፬", "4")
+
+INCH_TMP = r'\d+""'
+
+def inflect_transform(data):
+    data = re.sub(r'-|,|\band\b', ' ', data)
+    data = data.split(' ')
+    data = [x for x in data if x is not '']
+    return ' '.join(data)
+
+def INCH_transform(data):
+    neo_data = data[:-2]
+    return ' '.join([inflect_transform(num2words(int(neo_data))), 'inches'])
 
 def train():
     print('Train start...')
@@ -98,9 +111,9 @@ def load_res(path):
         res = json.loads(f.read())
     return res
     
-res = train()
+#res = train()
 path = './output/res.json'
-dump_res(res, path)
+#dump_res(res, path)
 res = load_res(path)
 
 print('len(res): {}'.format(len(res)))
@@ -141,10 +154,13 @@ def test():
             out.write('"' + srtd[0][0] + '"')
             changes += 1
         else:
+            print(line)
+            # actually there are only four inches not appeared
+            
             if len(line) > 1:
                 val = line.split(',')
                 # number with at most 1 ','
-                if len(val) == 2 and val[0].isdigit and val[1].isdigit:
+                if len(val) == 2 and val[0].isdigit() and val[1].isdigit():
                     line = ''.join(val)
     
             if line.isdigit():
@@ -167,6 +183,11 @@ def test():
     
                 out.write('"' + ' '.join(val) + '"')
                 changes += 1
+            elif re.match(INCH_TMP, line):
+                line = INCH_transform(line)
+                print(line)
+                out.write('"' + line + '"')
+                changes += 1
             else:
                 out.write('"' + line + '"')
     
@@ -177,4 +198,4 @@ def test():
     test.close()
     out.close()
 
-# test()
+test()
