@@ -52,8 +52,8 @@ def WEB_transform(data):
         else:
             after.append(char)
     after = ' '.join(after)
-    print('before:', before)
-    print('after:', after)
+    #print('before:', before)
+    #print('after:', after)
     return ' '.join(after)
 
 def INCH_transform(data):
@@ -186,12 +186,22 @@ def test():
         tag = line_pred[pos + 1:]
 
         if line in res:
-            if tag == 'ELECTRONIC':
+            if tag == 'ELECTRONIC' and '.' in line:
                 line = WEB_transform(line)
             else:
                 # here return the first (value, cnt) with line as key
                 srtd = sorted(res[line].items(), key=operator.itemgetter(1), reverse=True)
                 line = srtd[0][0]
+
+                before = line
+                line = re.sub(r'\b_letter\b', ' ', line)
+                for l in string.ascii_letters[:26]:
+                    line = re.sub(l+'_letter', l, line)
+                line = ' '.join(filter(lambda x: x, line.split(' ')))
+                if before != line:
+                    print('before:', before)
+                    print('after:', line) 
+
             out.write('"' + line + '"')
             changes += 1
         else:
