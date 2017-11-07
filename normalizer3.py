@@ -1,3 +1,4 @@
+#encoding=utf8
 ########################################################
 '''
 READ MY COMMENT BELOW
@@ -10,9 +11,9 @@ from num2words import num2words
 import gc
 
 
-INPUT_PATH = r'../input'
-DATA_INPUT_PATH = r'../input/en_with_types'
-SUBM_PATH = INPUT_PATH
+INPUT_PATH = r'./input'
+DATA_INPUT_PATH = r'./input/en_with_types'
+SUBM_PATH = r'./output'
 
 SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
 SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
