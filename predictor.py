@@ -13,10 +13,11 @@ max_num_features = 10
 pad_size = 1
 boundary_letter = -1
 space_letter = 0
-max_data_size = 320000
+max_data_size = 320 # 320000
 
 out_path = r'output'
 df = pd.read_csv(r'input/en_train.csv')
+df_test = pd.read_csv(r'input/en_test.csv')
 
 x_data = []
 y_data =  pd.factorize(df['class'])
@@ -28,6 +29,13 @@ for x in df['before'].values:
     for xi, i in zip(list(str(x)), np.arange(max_num_features)):
         x_row[i] = ord(xi)
     x_data.append(x_row)
+
+x_test = []    
+for x in df_test['before'].values:
+    x_row = np.ones(max_num_features, dtype=int) * space_letter
+    for xi, i in zip(list(str(x)), np.arange(max_num_features)):
+        x_row[i] = ord(xi)
+    x_test.append(x_row)
 
 def context_window_transform(data, pad_size):
     pre = np.zeros(max_num_features)
@@ -43,17 +51,20 @@ def context_window_transform(data, pad_size):
         neo_data.append([int(x) for y in row for x in y])
     return neo_data
 
-x_data = x_data[:max_data_size]
-y_data = y_data[:max_data_size]
+#x_data = x_data[:max_data_size]
+#y_data = y_data[:max_data_size]
 x_data = np.array(context_window_transform(x_data, pad_size))
 gc.collect()
 x_data = np.array(x_data)
 y_data = np.array(y_data)
 
+#x_test = x_test[:max_data_size]
+x_test = np.array(context_window_transform(x_test, pad_size))
+x_test = np.array(x_test)
+
 print('Total number of samples:', len(x_data))
-print('Use: ', max_data_size)
-#x_data = np.array(x_data)
-#y_data = np.array(y_data)
+#print('Use: ', max_data_size)
+print('Total number of test samples:', len(x_test))
 
 print('x_data sample:')
 print(x_data[0])
@@ -74,6 +85,8 @@ dtrain = xgb.DMatrix(x_train, label=y_train)
 dvalid = xgb.DMatrix(x_valid, label=y_valid)
 watchlist = [(dvalid, 'valid'), (dtrain, 'train')]
 
+dtest = xgb.DMatrix(x_test)
+
 param = {'objective':'multi:softmax',
          'eta':'0.3', 'max_depth':10,
          'silent':1, 'nthread':-1,
@@ -90,6 +103,13 @@ x_valid = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]]
 x_valid = [''.join(x) for x in x_valid]
 x_valid = [re.sub('a+$', '', x) for x in x_valid]
 
+pred_test = model.predict(dtest)
+pred_test = [labels[int(x)] for x in pred_test]
+
+x_test = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_test]
+x_test = [''.join(x) for x in x_test]
+x_test = [re.sub('a+$', '', x) for x in x_test]
+
 gc.collect()
 
 df_pred = pd.DataFrame(columns=['data', 'predict', 'target'])
@@ -97,6 +117,11 @@ df_pred['data'] = x_valid
 df_pred['predict'] = pred
 df_pred['target'] = y_valid
 df_pred.to_csv(os.path.join(out_path, 'pred.csv'))
+
+df_pred_test = pd.DataFrame(columns=['data', 'predict'])
+df_pred_test['data'] = x_test
+df_pred_test['predict'] = pred_test
+df_pred_test.to_csv(os.path.join(out_path, 'pred_test.csv'))
 
 df_erros = df_pred.loc[df_pred['predict'] != df_pred['target']]
 df_erros.to_csv(os.path.join(out_path, 'errors.csv'), index=False)
