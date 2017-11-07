@@ -12,14 +12,21 @@ import gc
 import io
 import json
 import re
+import string
+import code
+
+from io import open
 
 INPUT_PATH = r'./input'
 DATA_INPUT_PATH = r'./input/en_with_types'
 SUBM_PATH = r'./output'
 
-SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
-SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
-OTH = str.maketrans("፬", "4")
+#SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
+#SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
+#OTH = str.maketrans("፬", "4")
+SUB = None
+SUP = None
+OTH = None
 
 INCH_TMP = r'\d+""'
 
@@ -28,6 +35,26 @@ def inflect_transform(data):
     data = data.split(' ')
     data = [x for x in data if x is not '']
     return ' '.join(data)
+
+def WEB_transform(data):
+    if '.' not in data:
+        return data
+    before = data
+    after = []
+    m = {u'.':'dot', 
+         u'/':'slash',
+         u':':'colon',
+         u',':'comma',
+         u'-':'dash'}
+    for char in data:
+        if char in m:
+            after.append(m[char])
+        else:
+            after.append(char)
+    after = ' '.join(after)
+    print('before:', before)
+    print('after:', after)
+    return ' '.join(after)
 
 def INCH_transform(data):
     neo_data = data[:-2]
@@ -132,9 +159,15 @@ def test():
     out = open(os.path.join(SUBM_PATH, 'baseline_ext_en.csv'), "w", encoding='UTF8')
     out.write('"id","after"\n')
     test = open(os.path.join(INPUT_PATH, "en_test.csv"), encoding='UTF8')
+    pred = open(os.path.join(SUBM_PATH, "pred_test.csv"), encoding='UTF8')
     line = test.readline().strip()
+    line_pred = pred.readline().strip()
     while 1:
         line = test.readline().strip()
+        try:
+            line_pred = pred.readline().strip()
+        except:
+            code.interact(local=locals())
         if line == '':
             break
     
@@ -148,10 +181,18 @@ def test():
     
         line = line[1:-1]
         out.write('"' + i1 + '_' + i2 + '",')
+
+        pos = line_pred.rfind(',')
+        tag = line_pred[pos + 1:]
+
         if line in res:
-            # here return the first (value, cnt) with line as key
-            srtd = sorted(res[line].items(), key=operator.itemgetter(1), reverse=True)
-            out.write('"' + srtd[0][0] + '"')
+            if tag == 'ELECTRONIC':
+                line = WEB_transform(line)
+            else:
+                # here return the first (value, cnt) with line as key
+                srtd = sorted(res[line].items(), key=operator.itemgetter(1), reverse=True)
+                line = srtd[0][0]
+            out.write('"' + line + '"')
             changes += 1
         else:
             print(line)
