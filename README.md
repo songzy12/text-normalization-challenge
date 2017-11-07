@@ -28,18 +28,22 @@ https://www.kaggle.com/headsortails/watch-your-language-update-feature-engineeri
 
 Change nothing: **0.9231**
 
-### normalizer0
+### normalizer{0, 0_}
 
 Change to the most frequent pattern in training set: **0.9867**
 
 ### normalizer1
 
-More training data (https://www.kaggle.com/google-nlu/text-normalization/downloads/text-normalization.zip) && num2words && measure rules: 
+[More data](https://www.kaggle.com/google-nlu/text-normalization/downloads/text-normalization.zip) && num2words && measure rules: 
 
 ### normalizer2
 
-money rules: 
+decimal, digit, money rules: 
 
-### normalizer3
+Actually this is of no use, since only 4 inches instance not appeared in training set.
 
-More training data (<https://storage.googleapis.com/text-normalization/en_with_types.tgz>): 
+## Method
+
+### normalizer
+
+[Big data](https://storage.googleapis.com/text-normalization/en_with_types.tgz) && num2words && measure rules: **0.9954**
