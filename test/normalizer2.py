@@ -7,8 +7,8 @@ import os
 import inflect
 import re
 
-INPUT_PATH = r'./output/'
-SUBM_PATH = r'./output/'
+INPUT_PATH = r'../output/'
+SUBM_PATH = r'../output/'
 
 engine = inflect.engine()
 
