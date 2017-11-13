@@ -66,7 +66,8 @@ def train():
     file = "en_train.csv"
     train = open(os.path.join(INPUT_PATH, "en_train.csv"), encoding='UTF8')
     line = train.readline()
-    res = dict()
+    #res = dict()
+    res_class = dict()
     total = 0
     not_same = 0
     while 1:
@@ -81,53 +82,67 @@ def train():
         text = text[1:-1]
         arr = text.split('","')
         # arr[0], arr[1] are 'before', 'after' now
+        pos_class = line.find(',"')
+        text_class = line[pos_class+2:pos]
+
         if arr[0] != arr[1]:
             not_same += 1
-        if arr[0] not in res:
-            res[arr[0]] = dict()
-            res[arr[0]][arr[1]] = 1
+        #if arr[0] not in res:
+        #    res[arr[0]] = dict()
+        #    res[arr[0]][arr[1]] = 1
+        #else:
+        #    if arr[1] in res[arr[0]]:
+        #        res[arr[0]][arr[1]] += 1
+        #    else:
+        #        res[arr[0]][arr[1]] = 1
+
+        if ('.'.join([arr[0], text_class])) not in res_class:
+            res_class['.'.join([arr[0], text_class])] = dict()
+            res_class['.'.join([arr[0], text_class])][arr[1]] = 1
         else:
-            if arr[1] in res[arr[0]]:
-                res[arr[0]][arr[1]] += 1
+            if arr[1] in res_class['.'.join([arr[0], text_class])]:
+                res_class['.'.join([arr[0], text_class])][arr[1]] += 1
             else:
-                res[arr[0]][arr[1]] = 1
+                res_class['.'.join([arr[0], text_class])][arr[1]] = 1
+
     train.close()
     print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
     
-    files = os.listdir(DATA_INPUT_PATH)
-    for file in files:
-        train = open(os.path.join(DATA_INPUT_PATH, file), encoding='UTF8')
-        while 1:
-            line = train.readline().strip()
-            if line == '':
-                break
-            total += 1
-            pos = line.find('\t')
-            text = line[pos + 1:]
-            if text[:3] == '':
-                continue
-            arr = text.split('\t')
-            if arr[0] == '<eos>':
-                continue
-            if arr[1] != '<self>':
-                not_same += 1
-    
-            if arr[1] == '<self>' or arr[1] == 'sil':
-                arr[1] = arr[0]
-    
-            if arr[0] not in res:
-                res[arr[0]] = dict()
-                res[arr[0]][arr[1]] = 1
-            else:
-                if arr[1] in res[arr[0]]:
-                    res[arr[0]][arr[1]] += 1
-                else:
-                    res[arr[0]][arr[1]] = 1
-        train.close()
-        print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
+    #files = os.listdir(DATA_INPUT_PATH)
+    #for file in files:
+    #    train = open(os.path.join(DATA_INPUT_PATH, file), encoding='UTF8')
+    #    while 1:
+    #        line = train.readline().strip()
+    #        if line == '':
+    #            break
+    #        total += 1
+    #        pos = line.find('\t')
+    #        text = line[pos + 1:]
+    #        if text[:3] == '':
+    #            continue
+    #        arr = text.split('\t')
+    #        if arr[0] == '<eos>':
+    #            continue
+    #        if arr[1] != '<self>':
+    #            not_same += 1
+    #
+    #        if arr[1] == '<self>' or arr[1] == 'sil':
+    #            arr[1] = arr[0]
+    #
+    #        if arr[0] not in res:
+    #            res[arr[0]] = dict()
+    #            res[arr[0]][arr[1]] = 1
+    #        else:
+    #            if arr[1] in res[arr[0]]:
+    #                res[arr[0]][arr[1]] += 1
+    #            else:
+    #                res[arr[0]][arr[1]] = 1
+    #    train.close()
+    #    print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
     # res is now all the ['before']['after'] pairs
     gc.collect()
-    return res
+    #return res
+    return res_class
 
 def dump_res(res, path):
     with io.open(path, 'w', encoding='utf8') as f:
@@ -139,11 +154,14 @@ def load_res(path):
     return res
     
 #res = train()
-path = './output/res.json'
+res_path = './output/res.json'
+res_class_path = './output/res_class.json'
 #dump_res(res, path)
-res = load_res(path)
+res_class = load_res(res_class_path)
+res = load_res(res_path)
 
 print('len(res): {}'.format(len(res)))
+print('len(res_class): {}'.format(len(res_class)))
 
 sdict = {}
 sdict['km2'] = 'square kilometers'
@@ -156,7 +174,10 @@ sdict['m²'] = 'square meters'
 def test():
     total = 0
     changes = 0
-    out = open(os.path.join(SUBM_PATH, 'baseline_ext_en.csv'), "w", encoding='UTF8')
+
+    m = {}
+    
+    out = open(os.path.join(SUBM_PATH, 'baseline_ext_class_en.csv'), "w", encoding='UTF8')
     out.write('"id","after"\n')
     test = open(os.path.join(INPUT_PATH, "en_test.csv"), encoding='UTF8')
     pred = open(os.path.join(SUBM_PATH, "pred_test.csv"), encoding='UTF8')
@@ -185,7 +206,27 @@ def test():
         pos = line_pred.rfind(',')
         tag = line_pred[pos + 1:]
 
-        if line in res:
+        if ".".join([line, tag]) in res_class:
+            srtd = sorted(res_class[".".join([line, tag])].items(), key=operator.itemgetter(1), reverse=True)
+            line = srtd[0][0]
+
+            before = line
+            line = re.sub(r'\b_letter\b', ' ', line)
+            for l in string.ascii_letters[:26]:
+                line = re.sub(l+'_letter', l, line)
+            line = ' '.join(filter(lambda x: x, line.split(' ')))
+            #if before != line:
+            #    print('before:', before)
+            #    print('after:', line) 
+
+            out.write('"' + line + '"')
+            m[".".join([before, tag])] = line 
+            changes += 1
+
+
+        elif line in res:
+            #if len(res[line]) > 1:
+            #    m[line] = [total, res[line]]
             if tag == 'ELECTRONIC' and '.' in line:
                 line = WEB_transform(line)
             else:
@@ -198,12 +239,13 @@ def test():
                 for l in string.ascii_letters[:26]:
                     line = re.sub(l+'_letter', l, line)
                 line = ' '.join(filter(lambda x: x, line.split(' ')))
-                if before != line:
-                    print('before:', before)
-                    print('after:', line) 
+                #if before != line:
+                #    print('before:', before)
+                #    print('after:', line) 
 
             out.write('"' + line + '"')
             changes += 1
+
         else:
             print(line)
             # actually there are only four inches not appeared
@@ -248,5 +290,8 @@ def test():
     print('Total: {} Changed: {}'.format(total, changes))
     test.close()
     out.close()
+
+    with open('output/ambi_class.json', 'w', encoding='utf8') as f:
+        f.write(json.dumps(m, ensure_ascii=False, indent=4))
 
 test()
