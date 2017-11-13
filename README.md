@@ -47,3 +47,21 @@ Actually this is of no use, since only 4 inches instance not appeared in trainin
 ### normalizer
 
 [Big data](https://storage.googleapis.com/text-normalization/en_with_types.tgz) && num2words && measure rules: **0.9954**
+
+### a_letter
+
+```
+$ grep dot baseline_ext_en.csv | wc -l
+934
+```
+
+change all `a_letter` to `a`: **0.9957**
+
+## ambiguous
+
+```
+LI: fifty one, fifty first, the fifty first, l i
+```
+
+build another dictionary with (before, class) as a key:  **0.9978**
+
