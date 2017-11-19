@@ -17,18 +17,23 @@ import code
 
 from io import open
 
+from helper import *
+
 INPUT_PATH = r'./input'
 DATA_INPUT_PATH = r'./input/en_with_types'
 SUBM_PATH = r'./output'
 
-#SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
-#SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
-#OTH = str.maketrans("፬", "4")
-SUB = None
-SUP = None
-OTH = None
+SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
+SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
+OTH = str.maketrans("፬", "4")
+#SUB = None
+#SUP = None
+#OTH = None
 
 INCH_TMP = r'\d+""'
+
+
+
 
 def inflect_transform(data):
     data = re.sub(r'-|,|\band\b', ' ', data)
@@ -179,8 +184,8 @@ def test():
     
     out = open(os.path.join(SUBM_PATH, 'baseline_ext_class_en.csv'), "w", encoding='UTF8')
     out.write('"id","after"\n')
-    test = open(os.path.join(INPUT_PATH, "en_test.csv"), encoding='UTF8')
-    pred = open(os.path.join(SUBM_PATH, "pred_test.csv"), encoding='UTF8')
+    test = open(os.path.join(INPUT_PATH, "en_test_2.csv"), encoding='UTF8')
+    pred = open(os.path.join(SUBM_PATH, "pred_test_2.csv"), encoding='UTF8')
     line = test.readline().strip()
     line_pred = pred.readline().strip()
     while 1:
@@ -205,12 +210,14 @@ def test():
 
         pos = line_pred.rfind(',')
         tag = line_pred[pos + 1:]
+        label = tag
+
+        before = line
 
         if ".".join([line, tag]) in res_class:
             srtd = sorted(res_class[".".join([line, tag])].items(), key=operator.itemgetter(1), reverse=True)
             line = srtd[0][0]
 
-            before = line
             line = re.sub(r'\b_letter\b', ' ', line)
             for l in string.ascii_letters[:26]:
                 line = re.sub(l+'_letter', l, line)
@@ -222,8 +229,6 @@ def test():
             out.write('"' + line + '"')
             m[".".join([before, tag])] = line 
             changes += 1
-
-
         elif line in res:
             #if len(res[line]) > 1:
             #    m[line] = [total, res[line]]
@@ -245,6 +250,126 @@ def test():
 
             out.write('"' + line + '"')
             changes += 1
+
+        elif label == 'ADDRESS':
+            try:
+                norm = address(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'CARDINAL'
+        elif label == 'CARDINAL':
+            try:
+                norm = cardinal(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'DATE'
+        elif label == 'DATE':
+            try:
+                norm = date(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'DECIMAL'
+        elif label == 'DECIMAL':
+            try:
+                norm = decimal(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'DIGIT',
+        elif label == 'DIGIT':
+            try:
+                norm = digit(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'ELECTRONIC',
+        elif label == 'ELECTRONIC':
+            try:
+                norm = electronic(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'FRACTION',
+        elif label == 'FRACTION':
+            try:
+                norm = fraction(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'LETTERS',
+        elif label == 'LETTERS':
+            try:
+                norm = letters(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'MEASURE',
+        elif label == 'MEASURE':
+            try:
+                norm = measure(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'MONEY',
+        elif label == 'MONEY':
+            try:
+                norm = money(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'ORDINAL',
+        elif label == 'ORDINAL':
+            try:
+                norm = ordinal(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'PLAIN' nothing changes
+        elif label == 'PLAIN':
+            norm = before
+            out.write('"' + norm + '"')
+        #'PUNCT',
+        elif label == 'PUNCT':
+            norm = before
+            out.write('"' + norm + '"')
+        #'TELEPHONE',
+        elif label == 'TELEPHONE':
+            try:
+                norm = telephone(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'TIME',
+        elif label == 'TIME':
+            try:
+                norm = time(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
+        #'VERBATIM'
+        elif label == 'VERBATIM':
+            try:
+                norm = verbatim(before)
+                out.write('"' + norm + '"')
+                changes += 1
+            except:
+                out.write('"' + line + '"')
 
         else:
             print(line)

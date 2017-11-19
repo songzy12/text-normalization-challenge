@@ -17,7 +17,7 @@ max_data_size = 320 # 320000
 
 out_path = r'output'
 df = pd.read_csv(r'input/en_train.csv', encoding='utf8')
-df_test = pd.read_csv(r'input/en_test.csv', encoding='utf8')
+df_test = pd.read_csv(r'input/en_test_2.csv', encoding='utf8')
 
 #x_data = []
 y_data =  pd.factorize(df['class'])
@@ -124,7 +124,7 @@ gc.collect()
 df_pred_test = pd.DataFrame(columns=['data', 'predict'])
 df_pred_test['data'] = x_test
 df_pred_test['predict'] = pred_test
-df_pred_test.to_csv(os.path.join(out_path, 'pred_test.csv'), encoding='utf8')
+df_pred_test.to_csv(os.path.join(out_path, 'pred_test_2.csv'), encoding='utf8')
 
 #df_erros = df_pred.loc[df_pred['predict'] != df_pred['target']]
 #df_erros.to_csv(os.path.join(out_path, 'errors.csv'), index=False, encoding='utf8')
