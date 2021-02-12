@@ -1,17 +1,43 @@
-import operator
-import pandas as pd
-import numpy as np
-import os
-import pickle
 from num2words import num2words
-import xgboost as xgb
-import numpy as np
 import re
 
 
+SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
+SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
+OTH = str.maketrans("፬", "4")
+INCH_TMP = r'\d+""'
+
+
+def WEB_transform(data):
+    if '.' not in data:
+        return data
+    after = []
+    m = {u'.': 'dot',
+         u'/': 'slash',
+         u':': 'colon',
+         u',': 'comma',
+         u'-': 'dash'}
+    for char in data:
+        if char in m:
+            after.append(m[char])
+        else:
+            after.append(char)
+    after = ' '.join(after)
+    return ' '.join(after)
+
+
+def INCH_transform(data):
+    neo_data = data[:-2]
+    words = num2words(int(neo_data))
+    words = re.sub(r'-|,|\band\b', ' ', words)
+    words = words.split(' ')
+    words = [x for x in words if x]
+    return ' '.join(words + ['inches'])
+
+
 def verbatim(x):
-    # this appears to be mainly deals with symbols that will be in the trained dictionary.
-    # only other thing is letters we need to separate
+    # this appears to be mainly deals with symbols that will be in the trained
+    # dictionary. only other thing is letters we need to separate.
     if len(x) > 1:
         x_list = [i for i in x]
         return " ".join(x_list)
@@ -20,11 +46,11 @@ def verbatim(x):
 
 
 def time(x):
-    x = re.sub('\.', '', x)
+    x = re.sub(r'\.', '', x)
     if len(x.split(':')) == 2:
         x = re.sub(':', ' ', x)
         x = re.sub('([^0-9])', r' \1 ', x)
-        x = re.sub('\s{2,}', ' ', x)
+        x = re.sub(r'\s{2,}', ' ', x)
         time_list = x.split(' ')
         t_list = [i for i in time_list if i != ""]
         for i, v in enumerate(t_list):
@@ -150,13 +176,17 @@ def decimal(x):
 
 def year(x):
     year_list = [num for num in str(x)]
-    if len(year_list) == 4 and (year_list[0] == "1" or (year_list[0] == "2" and year_list[2] != '0')):
+    if len(year_list) == 4 and \
+            (year_list[0] == "1" or
+                (year_list[0] == "2" and year_list[2] != '0')):
         year_list.insert(2, " ")
         year = "".join(year_list)
         year = year.split(' ')
         year = [num2words(int(num)) for num in year]
         year = " ".join(year)
-    elif len(year_list) == 4 and (year_list[0] == "1" or (year_list[0] == "2" and year_list[2] == '0')):
+    elif len(year_list) == 4 and \
+            (year_list[0] == "1" or
+                (year_list[0] == "2" and year_list[2] == '0')):
         year = "".join(year_list)
         year = num2words(int(year))
     elif len(year_list) == 2 and year_list[0] == '9':
@@ -181,20 +211,41 @@ def year(x):
 
 def date(x):
     x = re.sub(',', '', x)
-    months = ["january", "febuary", "march", "april", "may", "june",
-              "july", "august", "september", "october", "november", "december"]
 
-    day = {"01": 'first', "02": "second", "03": 'third', "04": 'fourth', "05": 'fifth', "06": 'sixth', "07": 'seventh', "08": 'eighth', "09": 'ninth', "10": 'tenth', "11": 'eleventh',
-           "12": 'twelfth', "13": 'thirteenth', "14": 'fourteenth', "15": 'fifteenth', "16": 'sixteenth', "17": 'seventeenth', "18": 'eighteenth', "19": 'nineteenth', "20": 'twentieth', "21": 'twenty-first',
-           "22": 'twenty-second', "23": 'twenty-third', "24": 'twenty-fourth', "25": 'twenty-fifth', "26": 'twenty-sixth', "27": 'twenty-seventh', "28": 'twenty-eighth', "29": 'twenty-ninth', "30": 'thirtieth', "31": 'thirty-first', "1": 'first', "2": "second", "3": 'third', "4": 'fourth', "5": 'fifth', "6": 'sixth', "7": 'seventh', "8": 'eighth', "9": 'ninth'}
+    day = {"01": 'first', "02": "second", "03": 'third', "04": 'fourth',
+           "05": 'fifth', "06": 'sixth', "07": 'seventh', "08": 'eighth',
+           "09": 'ninth', "10": 'tenth', "11": 'eleventh', "12": 'twelfth',
+           "13": 'thirteenth', "14": 'fourteenth', "15": 'fifteenth',
+           "16": 'sixteenth', "17": 'seventeenth', "18": 'eighteenth',
+           "19": 'nineteenth', "20": 'twentieth', "21": 'twenty-first',
+           "22": 'twenty-second', "23": 'twenty-third', "24": 'twenty-fourth',
+           "25": 'twenty-fifth', "26": 'twenty-sixth', "27": 'twenty-seventh',
+           "28": 'twenty-eighth', "29": 'twenty-ninth', "30": 'thirtieth',
+           "31": 'thirty-first', "1": 'first', "2": "second", "3": 'third',
+           "4": 'fourth', "5": 'fifth', "6": 'sixth', "7": 'seventh',
+           "8": 'eighth', "9": 'ninth'}
 
-    month = {"01": "January", "02": "February", "03": "March", "04": "April", "05": "May", "06": "June",
-             "07": "July", "08": "August", "09": "September", "1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June",
-             "7": "July", "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"}
+    month = {"01": "January", "02": "February", "03": "March", "04": "April",
+             "05": "May", "06": "June", "07": "July", "08": "August",
+             "09": "September", "1": "January", "2": "February", "3": "March",
+             "4": "April", "5": "May", "6": "June", "7": "July", "8": "August",
+             "9": "September", "10": "October", "11": "November",
+             "12": "December"}
 
-    ord_days = {"1st": 'first', "2nd": "second", "3rd": 'third', "4th": 'fourth', "5th": 'fifth', "6th": 'sixth', "7th": 'seventh', "8th": 'eighth', "9th": 'ninth', "10th": 'tenth', "11th": 'eleventh',
-                "12th": 'twelfth', "13th": 'thirteenth', "14th": 'fourteenth', "15th": 'fifteenth', "16th": 'sixteenth', "17th": 'seventeenth', "18th": 'eighteenth', "19th": 'nineteenth', "20th": 'twentieth', "21th": 'twenty-first',
-                "22nd": 'twenty-second', "23rd": 'twenty-third', "24th": 'twenty-fourth', "25th": 'twenty-fifth', "26th": 'twenty-sixth', "27th": 'twenty-seventh', "28th": 'twenty-eighth', "29th": 'twenty-ninth', "30th": 'thirtieth', "31st": 'thirty-first'}
+    ord_days = {"1st": 'first', "2nd": "second", "3rd": 'third',
+                "4th": 'fourth', "5th": 'fifth', "6th": 'sixth',
+                "7th": 'seventh', "8th": 'eighth', "9th": 'ninth',
+                "10th": 'tenth', "11th": 'eleventh', "12th": 'twelfth',
+                "13th": 'thirteenth', "14th": 'fourteenth',
+                "15th": 'fifteenth', "16th": 'sixteenth',
+                "17th": 'seventeenth', "18th": 'eighteenth',
+                "19th": 'nineteenth', "20th": 'twentieth',
+                "21th": 'twenty-first', "22nd": 'twenty-second',
+                "23rd": 'twenty-third', "24th": 'twenty-fourth',
+                "25th": 'twenty-fifth', "26th": 'twenty-sixth',
+                "27th": 'twenty-seventh', "28th": 'twenty-eighth',
+                "29th": 'twenty-ninth', "30th": 'thirtieth',
+                "31st": 'thirty-first'}
     x = re.sub(',', '', x)
     # Changing dates in form month/day/year
     if len(x.split("/")) == 3:
@@ -211,7 +262,8 @@ def date(x):
         date[2] = year(date[2])
         x_final = " ".join(date).lower()
     # Dates written out
-    elif len(x.split(' ')) > 1:  # testing for words (well sentences) like days and numbers with units
+    # testing for words (well sentences) like days and numbers with units
+    elif len(x.split(' ')) > 1:
         date_list = x.split(' ')
         for i, v in enumerate(date_list):
             if v in ord_days:  # checking for date case 15th OF Jan.
@@ -344,9 +396,9 @@ def cardinal(x):
             return x
         x = re.sub(',', '', x, count=10)
 
-        if(re.match('.+\..*', x)):
+        if(re.match(r'.+\..*', x)):
             x = num2words(float(x))
-        elif re.match('\..*', x):
+        elif re.match(r'\..*', x):
             x = num2words(float(x))
             x = x.replace('zero ', '', 1)
         else:
@@ -414,3 +466,14 @@ def electronic(x):
             return(x)
     except:
         return(x)
+
+
+def rom_to_int(num):
+    roman = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+    int_value = 0
+    for i in range(len(num)):
+        if i > 0 and roman[num[i]] > roman[num[i-1]]:
+            int_value += roman[num[i]] - 2*roman[num[i-1]]
+        else:
+            int_value += roman[num[i]]
+    return(int_value)

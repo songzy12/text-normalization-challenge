@@ -1,5 +1,5 @@
 input
 output
-venv
+
 *.swp
-*submission.csv
+__pycache__
