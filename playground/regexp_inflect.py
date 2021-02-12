@@ -2,13 +2,13 @@
 
 __author__ = 'BingQing Wei'
 
-import operator
 import os
-import inflect
 import re
 
-INPUT_PATH = r'../output/'
-SUBM_PATH = r'../output/'
+import inflect
+
+INPUT_DIR = '../output/'
+OUTPUT_DIR = '../output/'
 
 engine = inflect.engine()
 
@@ -21,7 +21,7 @@ def inflect_transform(data):
     # since the output of engine will have '-|,|\band\b'
     data = re.sub(r'-|,|\band\b', ' ', data)
     data = data.split(' ')
-    data = [x for x in data if x is not '']
+    data = [x for x in data if x]
     return ' '.join(data)
 
 
@@ -38,7 +38,7 @@ def NUMBER_transform(data):
 
 
 def DECIMAL_transform(data):
-    data = re.sub(',|\s*', '', data)
+    data = re.sub(r',|\s*', '', data)
     data = inflect_transform(engine.number_to_words(float(data)))
     return re.sub(r'^\bzero\s*', '', data)
 
@@ -52,7 +52,7 @@ def MONEY_transform(data):
         ts = DECIMAL_transform(ts)
     if m.group(2).lower() == 'm':
         return ' '.join([ts, 'million', 'dollars'])
-    elif m.group(2) is not '':
+    elif m.group(2) != '':
         return ' '.join([ts, m.group(2).lower(), 'dollars'])
     else:
         return ' '.join([ts, 'dollars'])
@@ -73,10 +73,10 @@ def solve():
     changes = 0
     total = 0
     out = open(os.path.join(
-        SUBM_PATH, 'baseline_ext_enhanced_en.csv'), "w", encoding='UTF8')
+        OUTPUT_DIR, 'inflect_submission.csv'), "w", encoding='UTF8')
     out.write('"id","after"\n')
     test = open(os.path.join(
-        INPUT_PATH, "baseline_ext_en.csv"), encoding='UTF8')
+        INPUT_DIR, "submission.csv"), encoding='UTF8')
     line = test.readline().strip()
     while 1:
         line = test.readline().strip()
