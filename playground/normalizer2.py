@@ -1,4 +1,4 @@
-#Enhancing your baseline
+# Enhancing your baseline
 
 __author__ = 'BingQing Wei'
 
@@ -16,26 +16,32 @@ NUMBER_TMP = r'^(?!0)[\d]+[\d,]*$'
 DECIMAL_TMP = r'^(?!0)\d*\.\d+$'
 MONEY_TMP = r'^\$([^a-zA-Z]*)\s*([a-zA-Z]*)$'
 
+
 def inflect_transform(data):
     # since the output of engine will have '-|,|\band\b'
     data = re.sub(r'-|,|\band\b', ' ', data)
     data = data.split(' ')
     data = [x for x in data if x is not '']
-    return  ' '.join(data)
+    return ' '.join(data)
+
 
 def DIGIT_transform(data):
     neo_data = re.sub(r',|\s*', '', data)
-    if int(neo_data) > 1000 and ',' not in data: return data
+    if int(neo_data) > 1000 and ',' not in data:
+        return data
     return inflect_transform(engine.number_to_words(int(neo_data)))
+
 
 def NUMBER_transform(data):
     data = re.sub(r',|\s*', '', data)
     return inflect_transform(engine.number_to_words(int(data)))
 
+
 def DECIMAL_transform(data):
     data = re.sub(',|\s*', '', data)
     data = inflect_transform(engine.number_to_words(float(data)))
     return re.sub(r'^\bzero\s*', '', data)
+
 
 def MONEY_transform(data):
     m = re.match(MONEY_TMP, data)
@@ -48,24 +54,29 @@ def MONEY_transform(data):
         return ' '.join([ts, 'million', 'dollars'])
     elif m.group(2) is not '':
         return ' '.join([ts, m.group(2).lower(), 'dollars'])
-    else: return ' '.join([ts, 'dollars'])
+    else:
+        return ' '.join([ts, 'dollars'])
 
 
 def verbose_wrapper(func, data, total=0, verbose=True):
-    if verbose: 
+    if verbose:
         print('nu: ', total + 2)
         print('Before: ', data)
     data = func(data)
-    if verbose: print('After: ', data)
+    if verbose:
+        print('After: ', data)
     return data
+
 
 def solve():
     print('Train start...')
     changes = 0
     total = 0
-    out = open(os.path.join(SUBM_PATH, 'baseline_ext_enhanced_en.csv'), "w", encoding='UTF8')
+    out = open(os.path.join(
+        SUBM_PATH, 'baseline_ext_enhanced_en.csv'), "w", encoding='UTF8')
     out.write('"id","after"\n')
-    test = open(os.path.join(INPUT_PATH, "baseline_ext_en.csv"), encoding='UTF8')
+    test = open(os.path.join(
+        INPUT_PATH, "baseline_ext_en.csv"), encoding='UTF8')
     line = test.readline().strip()
     while 1:
         line = test.readline().strip()
@@ -81,7 +92,8 @@ def solve():
 
         try:
             if re.match(DECIMAL_TMP, line):
-                line = verbose_wrapper(DECIMAL_transform, data=line, total=total)
+                line = verbose_wrapper(
+                    DECIMAL_transform, data=line, total=total)
                 changes += 1
             elif re.match(MONEY_TMP, line):
                 line = verbose_wrapper(MONEY_transform, data=line, total=total)
@@ -99,6 +111,7 @@ def solve():
     print('Total: {} Changed: {}'.format(total, changes))
     test.close()
     out.close()
+
 
 if __name__ == '__main__':
     solve()

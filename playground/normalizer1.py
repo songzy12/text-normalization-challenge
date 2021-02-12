@@ -11,9 +11,10 @@ SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
 SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
 OTH = str.maketrans("፬", "4")
 
+
 def solve():
     print('Train start...')
-    
+
     # Work with primary dataset
     file = "en_train.csv"
     train = open(INPUT_PATH + file, encoding='UTF8')
@@ -46,8 +47,8 @@ def solve():
     print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
 
     # Work with additional dataset from https://www.kaggle.com/google-nlu/text-normalization
-    files = ['output_1.csv', 'output_6.csv', 'output_11.csv', 'output_16.csv', \
-        'output_21.csv', 'output_91.csv', 'output_96.csv']
+    files = ['output_1.csv', 'output_6.csv', 'output_11.csv', 'output_16.csv',
+             'output_21.csv', 'output_91.csv', 'output_96.csv']
 
     for file in files:
         train = open(INPUT_PATH + file, encoding='UTF8')
@@ -82,7 +83,7 @@ def solve():
                     res[arr[0]][arr[1]] = 1
         train.close()
         print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
-    
+
     sdict = {}
     sdict['km2'] = 'square kilometers'
     sdict['km'] = 'kilometers'
@@ -113,7 +114,8 @@ def solve():
         line = line[1:-1]
         out.write('"' + i1 + '_' + i2 + '",')
         if line in res:
-            srtd = sorted(res[line].items(), key=operator.itemgetter(1), reverse=True)
+            srtd = sorted(res[line].items(),
+                          key=operator.itemgetter(1), reverse=True)
             out.write('"' + srtd[0][0] + '"')
             changes += 1
         else:
@@ -131,7 +133,7 @@ def solve():
                 changes += 1
             elif len(line.split(' ')) > 1:
                 val = line.split(' ')
-                for i, v in enumerate(val): 
+                for i, v in enumerate(val):
                     if v.isdigit():
                         srtd = v.translate(SUB)
                         srtd = srtd.translate(SUP)

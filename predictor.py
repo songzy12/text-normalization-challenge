@@ -13,29 +13,30 @@ max_num_features = 10
 pad_size = 1
 boundary_letter = -1
 space_letter = 0
-max_data_size = 320 # 320000
+max_data_size = 320  # 320000
 
 out_path = r'output'
 df = pd.read_csv(r'input/en_train.csv', encoding='utf8')
 df_test = pd.read_csv(r'input/en_test_2.csv', encoding='utf8')
 
 #x_data = []
-y_data =  pd.factorize(df['class'])
+y_data = pd.factorize(df['class'])
 labels = y_data[1]
 #y_data = y_data[0]
-#gc.collect()
-#for x in df['before'].values:
+# gc.collect()
+# for x in df['before'].values:
 #    x_row = np.ones(max_num_features, dtype=int) * space_letter
 #    for xi, i in zip(list(str(x)), np.arange(max_num_features)):
 #        x_row[i] = ord(xi)
 #    x_data.append(x_row)
 
-x_test = []    
+x_test = []
 for x in df_test['before'].values:
     x_row = np.ones(max_num_features, dtype=int) * space_letter
     for xi, i in zip(list(str(x)), np.arange(max_num_features)):
         x_row[i] = ord(xi)
     x_test.append(x_row)
+
 
 def context_window_transform(data, pad_size):
     pre = np.zeros(max_num_features)
@@ -44,7 +45,7 @@ def context_window_transform(data, pad_size):
     neo_data = []
     for i in np.arange(len(data) - pad_size * 2):
         row = []
-        for x in data[i : i + pad_size * 2 + 1]:
+        for x in data[i: i + pad_size * 2 + 1]:
             row.append([boundary_letter])
             row.append(x)
         row.append([boundary_letter])
@@ -54,9 +55,10 @@ def context_window_transform(data, pad_size):
 #x_data = x_data[:max_data_size]
 #y_data = y_data[:max_data_size]
 #x_data = np.array(context_window_transform(x_data, pad_size))
-#gc.collect()
+# gc.collect()
 #x_data = np.array(x_data)
 #y_data = np.array(y_data)
+
 
 #x_test = x_test[:max_data_size]
 x_test = np.array(context_window_transform(x_test, pad_size))
@@ -67,19 +69,19 @@ x_test = np.array(x_test)
 print('Total number of test samples:', len(x_test))
 
 #print('x_data sample:')
-#print(x_data[0])
+# print(x_data[0])
 #print('y_data sample:')
-#print(y_data[0])
-#print('labels:')
+# print(y_data[0])
+# print('labels:')
 print(labels)
 
 #x_train = x_data
 #y_train = y_data
-#gc.collect()
+# gc.collect()
 #
-#x_train, x_valid, y_train, y_valid= train_test_split(x_train, y_train,
+# x_train, x_valid, y_train, y_valid= train_test_split(x_train, y_train,
 #                                                      test_size=0.1, random_state=2017)
-#gc.collect()
+# gc.collect()
 #num_class = len(labels)
 #dtrain = xgb.DMatrix(x_train, label=y_train)
 #dvalid = xgb.DMatrix(x_valid, label=y_valid)
@@ -87,16 +89,16 @@ print(labels)
 
 dtest = xgb.DMatrix(x_test)
 
-#param = {'objective':'multi:softmax',
+# param = {'objective':'multi:softmax',
 #         'eta':'0.3', 'max_depth':10,
 #         'silent':1, 'nthread':-1,
 #         'num_class':num_class,
 #         'eval_metric':'merror'}
-#model = xgb.train(param, dtrain, 50, watchlist, early_stopping_rounds=20,
+# model = xgb.train(param, dtrain, 50, watchlist, early_stopping_rounds=20,
 #                  verbose_eval=10)
-#gc.collect()
+# gc.collect()
 
-model = xgb.Booster({'nthread':4})
+model = xgb.Booster({'nthread': 4})
 model.load_model(os.path.join(out_path, 'xgb_model'))
 
 #pred = model.predict(dvalid)
@@ -109,7 +111,8 @@ model.load_model(os.path.join(out_path, 'xgb_model'))
 pred_test = model.predict(dtest)
 pred_test = [labels[int(x)] for x in pred_test]
 
-x_test = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_test]
+x_test = [[chr(x) for x in y[2 + max_num_features: 2 +
+                             max_num_features * 2]] for y in x_test]
 x_test = [''.join(x) for x in x_test]
 x_test = [re.sub('a+$', '', x) for x in x_test]
 

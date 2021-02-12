@@ -9,11 +9,13 @@ d = d.loc[d['before'].drop_duplicates(keep='first').index]
 d = d.loc[d['before'] != d['after']]
 d = d.set_index('before')['after'].to_dict()
 
+
 def mapping(x):
     if x in d.keys():
         return d[x]
     else:
         return x
+
 
 test['after'] = test.before.apply(mapping)
 

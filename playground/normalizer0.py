@@ -62,7 +62,8 @@ def solve():
         line = line[1:-1]
         out.write('"' + i1 + '_' + i2 + '",')
         if line in res:
-            srtd = sorted(res[line].items(), key=operator.itemgetter(1), reverse=True)
+            srtd = sorted(res[line].items(),
+                          key=operator.itemgetter(1), reverse=True)
             out.write('"' + srtd[0][0] + '"')
             changes += 1
         else:

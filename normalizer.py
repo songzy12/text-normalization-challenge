@@ -1,4 +1,4 @@
-#encoding=utf8
+# encoding=utf8
 ########################################################
 '''
 READ MY COMMENT BELOW
@@ -33,24 +33,23 @@ OTH = str.maketrans("፬", "4")
 INCH_TMP = r'\d+""'
 
 
-
-
 def inflect_transform(data):
     data = re.sub(r'-|,|\band\b', ' ', data)
     data = data.split(' ')
     data = [x for x in data if x is not '']
     return ' '.join(data)
 
+
 def WEB_transform(data):
     if '.' not in data:
         return data
     before = data
     after = []
-    m = {u'.':'dot', 
-         u'/':'slash',
-         u':':'colon',
-         u',':'comma',
-         u'-':'dash'}
+    m = {u'.': 'dot',
+         u'/': 'slash',
+         u':': 'colon',
+         u',': 'comma',
+         u'-': 'dash'}
     for char in data:
         if char in m:
             after.append(m[char])
@@ -61,13 +60,15 @@ def WEB_transform(data):
     #print('after:', after)
     return ' '.join(after)
 
+
 def INCH_transform(data):
     neo_data = data[:-2]
     return ' '.join([inflect_transform(num2words(int(neo_data))), 'inches'])
 
+
 def train():
     print('Train start...')
-    
+
     file = "en_train.csv"
     train = open(os.path.join(INPUT_PATH, "en_train.csv"), encoding='UTF8')
     line = train.readline()
@@ -92,10 +93,10 @@ def train():
 
         if arr[0] != arr[1]:
             not_same += 1
-        #if arr[0] not in res:
+        # if arr[0] not in res:
         #    res[arr[0]] = dict()
         #    res[arr[0]][arr[1]] = 1
-        #else:
+        # else:
         #    if arr[1] in res[arr[0]]:
         #        res[arr[0]][arr[1]] += 1
         #    else:
@@ -112,9 +113,9 @@ def train():
 
     train.close()
     print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
-    
+
     #files = os.listdir(DATA_INPUT_PATH)
-    #for file in files:
+    # for file in files:
     #    train = open(os.path.join(DATA_INPUT_PATH, file), encoding='UTF8')
     #    while 1:
     #        line = train.readline().strip()
@@ -146,18 +147,21 @@ def train():
     #    print(file + ':\tTotal: {} Have diff value: {}'.format(total, not_same))
     # res is now all the ['before']['after'] pairs
     gc.collect()
-    #return res
+    # return res
     return res_class
+
 
 def dump_res(res, path):
     with io.open(path, 'w', encoding='utf8') as f:
         f.write(json.dumps(res, ensure_ascii=False, indent=4))
 
+
 def load_res(path):
     with io.open(path) as f:
         res = json.loads(f.read())
     return res
-    
+
+
 #res = train()
 res_path = './output/res.json'
 res_class_path = './output/res_class.json'
@@ -176,13 +180,15 @@ sdict['lb'] = 'pounds'
 sdict['dr'] = 'doctor'
 sdict['m²'] = 'square meters'
 
+
 def test():
     total = 0
     changes = 0
 
     m = {}
-    
-    out = open(os.path.join(SUBM_PATH, 'baseline_ext_class_en.csv'), "w", encoding='UTF8')
+
+    out = open(os.path.join(SUBM_PATH, 'baseline_ext_class_en.csv'),
+               "w", encoding='UTF8')
     out.write('"id","after"\n')
     test = open(os.path.join(INPUT_PATH, "en_test_2.csv"), encoding='UTF8')
     pred = open(os.path.join(SUBM_PATH, "pred_test_2.csv"), encoding='UTF8')
@@ -196,15 +202,15 @@ def test():
             code.interact(local=locals())
         if line == '':
             break
-    
+
         pos = line.find(',')
         i1 = line[:pos]
         line = line[pos + 1:]
-    
+
         pos = line.find(',')
         i2 = line[:pos]
         line = line[pos + 1:]
-    
+
         line = line[1:-1]
         out.write('"' + i1 + '_' + i2 + '",')
 
@@ -215,28 +221,30 @@ def test():
         before = line
 
         if ".".join([line, tag]) in res_class:
-            srtd = sorted(res_class[".".join([line, tag])].items(), key=operator.itemgetter(1), reverse=True)
+            srtd = sorted(res_class[".".join([line, tag])].items(
+            ), key=operator.itemgetter(1), reverse=True)
             line = srtd[0][0]
 
             line = re.sub(r'\b_letter\b', ' ', line)
             for l in string.ascii_letters[:26]:
                 line = re.sub(l+'_letter', l, line)
             line = ' '.join(filter(lambda x: x, line.split(' ')))
-            #if before != line:
+            # if before != line:
             #    print('before:', before)
-            #    print('after:', line) 
+            #    print('after:', line)
 
             out.write('"' + line + '"')
-            m[".".join([before, tag])] = line 
+            m[".".join([before, tag])] = line
             changes += 1
         elif line in res:
-            #if len(res[line]) > 1:
+            # if len(res[line]) > 1:
             #    m[line] = [total, res[line]]
             if tag == 'ELECTRONIC' and '.' in line:
                 line = WEB_transform(line)
             else:
                 # here return the first (value, cnt) with line as key
-                srtd = sorted(res[line].items(), key=operator.itemgetter(1), reverse=True)
+                srtd = sorted(res[line].items(),
+                              key=operator.itemgetter(1), reverse=True)
                 line = srtd[0][0]
 
                 before = line
@@ -244,9 +252,9 @@ def test():
                 for l in string.ascii_letters[:26]:
                     line = re.sub(l+'_letter', l, line)
                 line = ' '.join(filter(lambda x: x, line.split(' ')))
-                #if before != line:
+                # if before != line:
                 #    print('before:', before)
-                #    print('after:', line) 
+                #    print('after:', line)
 
             out.write('"' + line + '"')
             changes += 1
@@ -258,7 +266,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'CARDINAL'
+        # 'CARDINAL'
         elif label == 'CARDINAL':
             try:
                 norm = cardinal(before)
@@ -266,7 +274,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'DATE'
+        # 'DATE'
         elif label == 'DATE':
             try:
                 norm = date(before)
@@ -274,7 +282,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'DECIMAL'
+        # 'DECIMAL'
         elif label == 'DECIMAL':
             try:
                 norm = decimal(before)
@@ -282,7 +290,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'DIGIT',
+        # 'DIGIT',
         elif label == 'DIGIT':
             try:
                 norm = digit(before)
@@ -290,7 +298,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'ELECTRONIC',
+        # 'ELECTRONIC',
         elif label == 'ELECTRONIC':
             try:
                 norm = electronic(before)
@@ -298,7 +306,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'FRACTION',
+        # 'FRACTION',
         elif label == 'FRACTION':
             try:
                 norm = fraction(before)
@@ -306,7 +314,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'LETTERS',
+        # 'LETTERS',
         elif label == 'LETTERS':
             try:
                 norm = letters(before)
@@ -314,7 +322,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'MEASURE',
+        # 'MEASURE',
         elif label == 'MEASURE':
             try:
                 norm = measure(before)
@@ -322,7 +330,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'MONEY',
+        # 'MONEY',
         elif label == 'MONEY':
             try:
                 norm = money(before)
@@ -330,7 +338,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'ORDINAL',
+        # 'ORDINAL',
         elif label == 'ORDINAL':
             try:
                 norm = ordinal(before)
@@ -338,15 +346,15 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'PLAIN' nothing changes
+        # 'PLAIN' nothing changes
         elif label == 'PLAIN':
             norm = before
             out.write('"' + norm + '"')
-        #'PUNCT',
+        # 'PUNCT',
         elif label == 'PUNCT':
             norm = before
             out.write('"' + norm + '"')
-        #'TELEPHONE',
+        # 'TELEPHONE',
         elif label == 'TELEPHONE':
             try:
                 norm = telephone(before)
@@ -354,7 +362,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'TIME',
+        # 'TIME',
         elif label == 'TIME':
             try:
                 norm = time(before)
@@ -362,7 +370,7 @@ def test():
                 changes += 1
             except:
                 out.write('"' + line + '"')
-        #'VERBATIM'
+        # 'VERBATIM'
         elif label == 'VERBATIM':
             try:
                 norm = verbatim(before)
@@ -374,13 +382,13 @@ def test():
         else:
             print(line)
             # actually there are only four inches not appeared
-            
+
             if len(line) > 1:
                 val = line.split(',')
                 # number with at most 1 ','
                 if len(val) == 2 and val[0].isdigit() and val[1].isdigit():
                     line = ''.join(val)
-    
+
             if line.isdigit():
                 srtd = line.translate(SUB)
                 srtd = srtd.translate(SUP)
@@ -398,7 +406,7 @@ def test():
                     # measure
                     elif v in sdict:
                         val[i] = sdict[v]
-    
+
                 out.write('"' + ' '.join(val) + '"')
                 changes += 1
             elif re.match(INCH_TMP, line):
@@ -408,15 +416,16 @@ def test():
                 changes += 1
             else:
                 out.write('"' + line + '"')
-    
+
         out.write('\n')
         total += 1
-    
+
     print('Total: {} Changed: {}'.format(total, changes))
     test.close()
     out.close()
 
     with open('output/ambi_class.json', 'w', encoding='utf8') as f:
         f.write(json.dumps(m, ensure_ascii=False, indent=4))
+
 
 test()
